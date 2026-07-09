@@ -10,8 +10,8 @@ Many women struggle with scattered resources, limited mentorship, and difficulty
 
 ## Important Links
 
-* **Live Deployment:** *[Insert Deployment URL]*
-* **Demo Video:** *[Insert YouTube/Google Drive URL]*
+* **Live Deployment:** *(Not started yet)*
+* **Demo Video:** *(Not started yet)*
 
 ---
 

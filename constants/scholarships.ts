@@ -1,0 +1,55 @@
+import { Scholarship } from '../types/scholarship';
+
+export const POPULAR_SCHOLARSHIPS: Scholarship[] = [
+  {
+    id: 'ghc-2026',
+    title: 'Grace Hopper Celebration Scholar Program',
+    provider: 'AnitaB.org',
+    amount: 1500,
+    type: 'diversity',
+    deadline: '2026-10-15',
+    description: 'Provides funding for female undergraduate, graduate students and faculty to attend the Grace Hopper Celebration conference.',
+    eligibilityRequirements: [
+      'Must identify as a woman or non-binary individual',
+      'Enrolled in an accredited degree program in computer science or related STEM field',
+      'Minimum GPA 3.0',
+    ],
+    applyUrl: 'https://ghc.anitab.org',
+    matchScore: 95,
+    createdAt: '2026-07-01T00:00:00Z',
+  },
+  {
+    id: 'gg-2026',
+    title: 'Generation Google Scholarship (Women in Computer Science)',
+    provider: 'Google',
+    amount: 10000,
+    type: 'merit',
+    deadline: '2026-05-01',
+    description: 'Established to help aspiring computer scientists excel in technology and become leaders in the field.',
+    eligibilityRequirements: [
+      'Intend to be enrolled as a full-time student in a Bachelors program',
+      'Studying Computer Science, Computer Engineering, or closely related technical field',
+      'Demonstrate a strong academic record and leadership capabilities',
+    ],
+    applyUrl: 'https://buildyourfuture.withgoogle.com',
+    matchScore: 92,
+    createdAt: '2026-07-01T00:00:00Z',
+  },
+  {
+    id: 'wit-2026',
+    title: 'Women in Tech Scholarship Program',
+    provider: 'Palantir Technologies',
+    amount: 7000,
+    type: 'diversity',
+    deadline: '2026-08-30',
+    description: 'Palantir launched this scholarship to support women pursuing degrees in STEM fields and launch careers in tech.',
+    eligibilityRequirements: [
+      'Enrolled as a full-time undergraduate student in Computer Science or Software Engineering',
+      'Identify as female',
+      'Willing to complete a Palantir internship interview process',
+    ],
+    applyUrl: 'https://www.palantir.com/students',
+    matchScore: 88,
+    createdAt: '2026-07-01T00:00:00Z',
+  },
+];

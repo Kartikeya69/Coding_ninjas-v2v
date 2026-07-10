@@ -421,7 +421,7 @@ app.post("/api/auth/demo-login", (req: Request, res: Response) => {
 });
 
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Google Gemini AI API Keys (12-Key Rotation Pool)
 const GEMINI_KEY_POOL = [

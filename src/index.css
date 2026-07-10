@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-brand-bg: #050505;
+  --color-brand-surface: #0B0B0D;
+  --color-brand-elevated: #111114;
+  --color-brand-violet: #8B5CFF;
+  --color-brand-magenta: #FF4FD8;
+  --color-brand-cyan: #27E8FF;
+  --color-brand-gold: #FFD84D;
+  --color-brand-emerald: #34F5A3;
+  --color-brand-coral: #FF6B7A;
+}
+
+@layer utilities {
+  .glow-violet {
+    box-shadow: 0 0 20px rgba(139, 92, 255, 0.15);
+  }
+  .glow-magenta {
+    box-shadow: 0 0 20px rgba(255, 79, 216, 0.15);
+  }
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(39, 232, 255, 0.15);
+  }
+  .glow-gold {
+    box-shadow: 0 0 20px rgba(255, 216, 77, 0.15);
+  }
+  .glass-card {
+    background: rgba(17, 17, 20, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .glass-card-hover:hover {
+    background: rgba(17, 17, 20, 0.6);
+    border-color: rgba(139, 92, 255, 0.3);
+    box-shadow: 0 0 25px rgba(139, 92, 255, 0.1);
+  }
+  .neon-border-violet {
+    border-color: rgba(139, 92, 255, 0.3);
+  }
+  .neon-border-magenta {
+    border-color: rgba(255, 79, 216, 0.3);
+  }
+  .neon-border-cyan {
+    border-color: rgba(39, 232, 255, 0.3);
+  }
+}
+
+/* Custom fade-in and float keyframes */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+@keyframes floatElement {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 8s infinite ease-in-out;
+}
+
+.animate-float {
+  animation: floatElement 6s infinite ease-in-out;
+}
+
+.animate-float-slow {
+  animation: floatElement 10s infinite ease-in-out;
+}
+
+.animate-float-fast {
+  animation: floatElement 4s infinite ease-in-out;
+}
+
+@keyframes shakeField {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shakeField 0.25s ease-in-out;
+}

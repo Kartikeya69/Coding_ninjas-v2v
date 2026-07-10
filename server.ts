@@ -518,6 +518,10 @@ function getAiClient(apiKey = getRotatingGeminiKey()): GoogleGenAI {
 }
 
 function isRetryableGeminiError(error: any): boolean {
+  if (error?.message === "Gemini request timed out.") {
+    return true;
+  }
+
   return [401, 403, 429, 500, 502, 503, 504].includes(Number(error?.status));
 }
 

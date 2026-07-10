@@ -477,32 +477,22 @@ app.post("/api/auth/demo-login", (req: Request, res: Response) => {
 
 const PORT = 3000;
 
-// Google Gemini AI API Keys (12-Key Rotation Pool)
-const GEMINI_KEY_POOL = [
-  "AIzaSyBCjcZQZFn8OqCjXI22_MT2588Dc5z6P0U",
-  "AIzaSyDrHbOY_tU0ZtlHSXhNNh-bM1UlADlbo3E",
-  "AIzaSyBSi_YvCGYVVihEctlfa7QHt7DHqH6jK08",
-  "AIzaSyA9vaYLN5ErJtkqLTDmv9To6SGSSwf0Aig",
-  "AIzaSyBNQ93-7x-8_eWfVWAnwToyKgFwJrj0tbA",
-  "AIzaSyDwlpcCH-9mpP46QSQbVkuVZ5KHe9Veoac",
-  "AIzaSyA-9l1u7wmRbXJTYxUNbY_OrNVdydFHgag",
-  "AIzaSyBFsNfbCdKgJKNFpiq7oQnKK4ZzWvi7kSA",
-  "AIzaSyCS5T4eFPovoOy2CMzDm4uBR3jQ60HvomY",
-  "AIzaSyBz97oReV3NWX0iW58kzx5_cyPl9f4v8YA",
-  "AIzaSyDe8lC_wm-YZ-qHK5qT6ifVpYUc25bXqes",
-  "AIzaSyCU0Mhwo_sXgUhSGnXGg6oDU8lCnnSggDs"
-];
-
 let currentKeyIndex = 0;
 
 function getRotatingGeminiKey(): string {
-  // If process.env.GEMINI_API_KEY is active and valid (not placeholder), we can also fallback to the 12-key pool
-  const envKey = process.env.GEMINI_API_KEY;
-  if (envKey && envKey !== "MY_GEMINI_API_KEY" && envKey !== "") {
-    return envKey;
+  const envKeys = [
+    process.env.GEMINI_API_KEY,
+    ...(process.env.GEMINI_API_KEY_POOL || "").split(","),
+  ]
+    .map((key) => key?.trim())
+    .filter((key): key is string => Boolean(key && key !== "MY_GEMINI_API_KEY"));
+
+  if (envKeys.length === 0) {
+    return "";
   }
-  const key = GEMINI_KEY_POOL[currentKeyIndex];
-  currentKeyIndex = (currentKeyIndex + 1) % GEMINI_KEY_POOL.length;
+
+  const key = envKeys[currentKeyIndex % envKeys.length];
+  currentKeyIndex = (currentKeyIndex + 1) % envKeys.length;
   return key;
 }
 

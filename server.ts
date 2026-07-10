@@ -480,12 +480,14 @@ const PORT = 3000;
 let currentKeyIndex = 0;
 
 function getGeminiKeys(): string[] {
-  return [
+  const keys = [
     process.env.GEMINI_API_KEY,
     ...(process.env.GEMINI_API_KEY_POOL || "").split(","),
   ]
     .map((key) => key?.trim())
     .filter((key): key is string => Boolean(key && key !== "MY_GEMINI_API_KEY"));
+
+  return Array.from(new Set(keys));
 }
 
 function hasGeminiKeys(): boolean {
@@ -526,17 +528,23 @@ async function generateGeminiContentWithRetry(request: any): Promise<any> {
   }
 
   let lastError: any;
-  for (let attempt = 0; attempt < envKeys.length; attempt++) {
+  const maxAttempts = Math.min(envKeys.length, 4);
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const key = envKeys[currentKeyIndex % envKeys.length];
     currentKeyIndex = (currentKeyIndex + 1) % envKeys.length;
 
     try {
       const client = getAiClient(key);
-      return await client.models.generateContent(request);
+      return await Promise.race([
+        client.models.generateContent(request),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Gemini request timed out.")), 15000)
+        ),
+      ]);
     } catch (error: any) {
       lastError = error;
       const status = Number(error?.status);
-      console.warn(`Gemini request failed with status ${status || "unknown"} on key ${attempt + 1}/${envKeys.length}.`);
+      console.warn(`Gemini request failed with status ${status || "timeout"} on key ${attempt + 1}/${maxAttempts}.`);
       if (!isRetryableGeminiError(error)) {
         throw error;
       }

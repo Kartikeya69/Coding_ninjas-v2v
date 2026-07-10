@@ -479,13 +479,21 @@ const PORT = 3000;
 
 let currentKeyIndex = 0;
 
-function getRotatingGeminiKey(): string {
-  const envKeys = [
+function getGeminiKeys(): string[] {
+  return [
     process.env.GEMINI_API_KEY,
     ...(process.env.GEMINI_API_KEY_POOL || "").split(","),
   ]
     .map((key) => key?.trim())
     .filter((key): key is string => Boolean(key && key !== "MY_GEMINI_API_KEY"));
+}
+
+function hasGeminiKeys(): boolean {
+  return getGeminiKeys().length > 0;
+}
+
+function getRotatingGeminiKey(): string {
+  const envKeys = getGeminiKeys();
 
   if (envKeys.length === 0) {
     return "";
@@ -496,8 +504,7 @@ function getRotatingGeminiKey(): string {
   return key;
 }
 
-function getAiClient(): GoogleGenAI {
-  const apiKey = getRotatingGeminiKey();
+function getAiClient(apiKey = getRotatingGeminiKey()): GoogleGenAI {
   return new GoogleGenAI({
     apiKey: apiKey,
     httpOptions: {
@@ -506,6 +513,37 @@ function getAiClient(): GoogleGenAI {
       },
     },
   });
+}
+
+function isRetryableGeminiError(error: any): boolean {
+  return [401, 403, 429, 500, 502, 503, 504].includes(Number(error?.status));
+}
+
+async function generateGeminiContentWithRetry(request: any): Promise<any> {
+  const envKeys = getGeminiKeys();
+  if (envKeys.length === 0) {
+    throw new Error("Gemini API key is not configured.");
+  }
+
+  let lastError: any;
+  for (let attempt = 0; attempt < envKeys.length; attempt++) {
+    const key = envKeys[currentKeyIndex % envKeys.length];
+    currentKeyIndex = (currentKeyIndex + 1) % envKeys.length;
+
+    try {
+      const client = getAiClient(key);
+      return await client.models.generateContent(request);
+    } catch (error: any) {
+      lastError = error;
+      const status = Number(error?.status);
+      console.warn(`Gemini request failed with status ${status || "unknown"} on key ${attempt + 1}/${envKeys.length}.`);
+      if (!isRetryableGeminiError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 // -------------------------------------------------------------
@@ -523,8 +561,7 @@ app.post("/api/copilot/chat", async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const key = getRotatingGeminiKey();
-    const isMock = !key || key === "MY_GEMINI_API_KEY" || key === "";
+    const isMock = !hasGeminiKeys();
 
     if (isMock) {
       // Return high-quality, simulated AI guidance if no API key is set
@@ -560,7 +597,6 @@ How would you like to proceed? We can run a mock interview, review your resume, 
     }
 
     // Call real Gemini
-    const client = getAiClient();
     const systemInstruction = `You are Lumina AI's Career Copilot, an elite technical career mentor, interview preparer, and coach.
 The current user is ${userProfile?.name || "a candidate"} (Age: ${userProfile?.age || "N/A"}, Country: ${userProfile?.country || "N/A"}).
 Education: ${userProfile?.educationLevel || "N/A"}.
@@ -577,7 +613,7 @@ Provide constructive, professional, and visually structured advice (using markdo
       parts: [{ text: m.content }],
     }));
 
-    const response = await client.models.generateContent({
+    const response = await generateGeminiContentWithRetry({
       model: "gemini-3.5-flash",
       contents,
       config: {
@@ -604,8 +640,7 @@ app.post("/api/startup/validate", async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const key = getRotatingGeminiKey();
-    const isMock = !key || key === "MY_GEMINI_API_KEY" || key === "";
+    const isMock = !hasGeminiKeys();
 
     if (isMock) {
       // Return high-quality, simulated business validation
@@ -643,7 +678,6 @@ app.post("/api/startup/validate", async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const client = getAiClient();
     const prompt = `Validate the following startup concept and generate a complete business assessment.
 Startup Name: "${name || "Untitled Startup"}"
 Startup Description: "${description}"
@@ -669,7 +703,7 @@ Analyze and formulate a response in valid, strict JSON matching this TypeScript 
   "actionPlan": string[] // 4 step-by-step goals for the next month
 }`;
 
-    const response = await client.models.generateContent({
+    const response = await generateGeminiContentWithRetry({
       model: "gemini-3.5-flash",
       contents: prompt,
       config: {
@@ -729,8 +763,7 @@ app.post("/api/career/roadmap", async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const key = getRotatingGeminiKey();
-    const isMock = !key || key === "MY_GEMINI_API_KEY" || key === "";
+    const isMock = !hasGeminiKeys();
 
     if (isMock) {
       res.json({
@@ -777,7 +810,6 @@ app.post("/api/career/roadmap", async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const client = getAiClient();
     const prompt = `Based on the user profile below, generate a personalized, high-fidelity 12-week Career Roadmap, listing the critical skills they need to acquire to bridge the skill gap, and standard target exams or certifications they should pursue.
 
 User Profile:
@@ -794,7 +826,7 @@ Generate a response in valid, strict JSON matching this TypeScript structure:
   "examsToTarget": string[] // 3 relevant certifications or professional exams
 }`;
 
-    const response = await client.models.generateContent({
+    const response = await generateGeminiContentWithRetry({
       model: "gemini-3.5-flash",
       contents: prompt,
       config: {
@@ -851,8 +883,7 @@ app.post("/api/career/resume", async (req: Request, res: Response): Promise<void
       return;
     }
 
-    const key = getRotatingGeminiKey();
-    const isMock = !key || key === "MY_GEMINI_API_KEY" || key === "";
+    const isMock = !hasGeminiKeys();
 
     if (isMock) {
       res.json({
@@ -875,7 +906,6 @@ app.post("/api/career/resume", async (req: Request, res: Response): Promise<void
       return;
     }
 
-    const client = getAiClient();
     const prompt = `Analyze the following resume text and provide optimization feedback aligned with the user's career profile.
 
 User Career Profile:
@@ -897,7 +927,7 @@ Generate a response in valid, strict JSON matching this TypeScript structure:
   }[] // 2 custom interview preparation questions based on their resume
 }`;
 
-    const response = await client.models.generateContent({
+    const response = await generateGeminiContentWithRetry({
       model: "gemini-3.5-flash",
       contents: prompt,
       config: {
@@ -953,8 +983,7 @@ app.post("/api/jobs/cover-letter", async (req: Request, res: Response): Promise<
       return;
     }
 
-    const key = getRotatingGeminiKey();
-    const isMock = !key || key === "MY_GEMINI_API_KEY" || key === "";
+    const isMock = !hasGeminiKeys();
 
     if (isMock) {
       const letter = `Dear Hiring Team at ${company},
@@ -974,7 +1003,6 @@ ${userProfile?.name || "Lumina Candidate"}`;
       return;
     }
 
-    const client = getAiClient();
     const prompt = `Generate a highly professional, compelling, and customized cover letter for the following job position based on the user's career profile.
 
 Job Details:
@@ -990,7 +1018,7 @@ Keep the tone professional, persuasive, and custom-tailored. Return a single JSO
   "letter": "string containing full cover letter with newlines"
 }`;
 
-    const response = await client.models.generateContent({
+    const response = await generateGeminiContentWithRetry({
       model: "gemini-3.5-flash",
       contents: prompt,
       config: {

@@ -1,0 +1,6 @@
+{
+  "name": "Lumina AI",
+  "description": "AI-powered Career & Opportunity Operating System for students, innovators, researchers, entrepreneurs, and women in tech.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

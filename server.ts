@@ -475,7 +475,7 @@ app.post("/api/auth/demo-login", (req: Request, res: Response) => {
 });
 
 
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
 let currentKeyIndex = 0;
 
